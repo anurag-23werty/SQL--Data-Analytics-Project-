@@ -1,0 +1,790 @@
+
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&display=swap');
+  *{box-sizing:border-box;margin:0;padding:0}
+  :root{
+    --bg:#0a0a0f;--bg2:#0f0f1a;--bg3:#141428;
+    --bronze:#cd7f32;--bronze2:#e8a04a;--bronze-glow:rgba(205,127,50,0.25);
+    --silver:#c0c0d0;--silver2:#e8e8f5;--silver-glow:rgba(192,192,220,0.2);
+    --gold:#ffd700;--gold2:#ffe44d;--gold-glow:rgba(255,215,0,0.25);
+    --cyan:#00e5ff;--cyan2:#80f0ff;--cyan-glow:rgba(0,229,255,0.15);
+    --purple:#a855f7;--purple2:#c084fc;--purple-glow:rgba(168,85,247,0.15);
+    --green:#00ff88;--green-glow:rgba(0,255,136,0.12);
+    --text:#e8e8f5;--text2:#9090b0;--mono:'JetBrains Mono',monospace;
+  }
+  body{background:var(--bg);color:var(--text);font-family:'Anthropic Sans',sans-serif;min-height:100vh;overflow-x:hidden}
+  
+  .container{max-width:680px;margin:0 auto;padding:0}
+  
+  /* NAV TABS */
+  .tabs{display:flex;gap:2px;background:var(--bg2);border-bottom:1px solid rgba(255,255,255,0.06);position:sticky;top:0;z-index:50}
+  .tab{flex:1;padding:14px 8px;font-size:12px;font-weight:500;text-align:center;cursor:pointer;color:var(--text2);border:none;background:transparent;transition:all .3s;letter-spacing:.05em;text-transform:uppercase}
+  .tab:hover{color:var(--text);background:rgba(255,255,255,0.04)}
+  .tab.active{color:var(--cyan);border-bottom:2px solid var(--cyan);background:rgba(0,229,255,0.04)}
+  
+  /* SECTIONS */
+  .section{display:none;padding:28px 20px}
+  .section.active{display:block}
+  
+  /* HERO */
+  .hero{text-align:center;padding:20px 0 32px}
+  .hero-title{font-size:22px;font-weight:500;background:linear-gradient(135deg,var(--cyan),var(--purple2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:8px}
+  .hero-sub{font-size:13px;color:var(--text2);line-height:1.6}
+  
+  /* ARCHITECTURE DIAGRAM */
+  .arch-diagram{position:relative}
+  
+  /* LAYER CARDS */
+  .layer-row{display:flex;gap:10px;margin-bottom:16px;align-items:stretch}
+  .layer-card{flex:1;border-radius:12px;padding:14px;cursor:pointer;transition:all .4s;position:relative;overflow:hidden}
+  .layer-card::before{content:'';position:absolute;inset:0;opacity:0;transition:opacity .3s;border-radius:12px}
+  .layer-card:hover::before{opacity:1}
+  
+  .bronze-card{border:1px solid var(--bronze);background:rgba(205,127,50,0.06)}
+  .bronze-card::before{background:var(--bronze-glow)}
+  .bronze-card.active-layer{background:rgba(205,127,50,0.14);box-shadow:0 0 30px var(--bronze-glow),inset 0 0 20px rgba(205,127,50,0.08)}
+  
+  .silver-card{border:1px solid var(--silver);background:rgba(192,192,220,0.04)}
+  .silver-card::before{background:var(--silver-glow)}
+  .silver-card.active-layer{background:rgba(192,192,220,0.1);box-shadow:0 0 30px var(--silver-glow),inset 0 0 20px rgba(192,192,220,0.06)}
+  
+  .gold-card{border:1px solid var(--gold);background:rgba(255,215,0,0.04)}
+  .gold-card::before{background:var(--gold-glow)}
+  .gold-card.active-layer{background:rgba(255,215,0,0.1);box-shadow:0 0 30px var(--gold-glow),inset 0 0 20px rgba(255,215,0,0.06)}
+  
+  .layer-badge{display:inline-flex;align-items:center;gap:6px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;margin-bottom:8px;padding:3px 8px;border-radius:20px}
+  .bronze-badge{background:rgba(205,127,50,0.2);color:var(--bronze2);border:1px solid rgba(205,127,50,0.3)}
+  .silver-badge{background:rgba(192,192,220,0.12);color:var(--silver2);border:1px solid rgba(192,192,220,0.25)}
+  .gold-badge{background:rgba(255,215,0,0.12);color:var(--gold2);border:1px solid rgba(255,215,0,0.3)}
+  
+  .layer-title{font-size:15px;font-weight:500;margin-bottom:4px}
+  .layer-desc{font-size:11px;color:var(--text2);line-height:1.5}
+  .layer-tag{display:inline-block;font-size:10px;padding:2px 6px;border-radius:4px;margin-top:6px;margin-right:4px;font-family:var(--mono)}
+  .bronze-tag{background:rgba(205,127,50,0.15);color:var(--bronze2)}
+  .silver-tag{background:rgba(192,192,220,0.1);color:var(--silver)}
+  .gold-tag{background:rgba(255,215,0,0.1);color:var(--gold2)}
+  
+  /* FLOW ARROW */
+  .flow-arrow{display:flex;justify-content:center;align-items:center;height:28px;margin:-4px 0}
+  .flow-arrow-svg{opacity:.6}
+  
+  /* DATA FLOW ANIMATION */
+  .flow-anim{background:var(--bg2);border:1px solid rgba(255,255,255,0.06);border-radius:12px;padding:16px;margin-top:16px}
+  .flow-title{font-size:11px;font-weight:500;text-transform:uppercase;letter-spacing:.1em;color:var(--text2);margin-bottom:12px}
+  .pipeline{display:flex;align-items:center;gap:0;position:relative;overflow:hidden}
+  .pipe-stage{text-align:center;font-size:10px;font-family:var(--mono);padding:8px 6px;border-radius:6px;min-width:0;flex:1}
+  .pipe-arrow-gap{width:20px;flex-shrink:0;display:flex;justify-content:center}
+  .pipe-dot{width:4px;height:4px;border-radius:50%;background:var(--cyan);margin:0 auto;animation:pipe-travel 3s linear infinite}
+  @keyframes pipe-travel{0%{transform:translateX(0);opacity:1}100%{transform:translateX(200px);opacity:0}}
+  
+  .stage-raw{background:rgba(205,127,50,0.12);border:1px solid rgba(205,127,50,0.3);color:var(--bronze2)}
+  .stage-clean{background:rgba(192,192,220,0.08);border:1px solid rgba(192,192,220,0.25);color:var(--silver2)}
+  .stage-model{background:rgba(255,215,0,0.08);border:1px solid rgba(255,215,0,0.25);color:var(--gold2)}
+  .stage-report{background:rgba(0,229,255,0.06);border:1px solid rgba(0,229,255,0.2);color:var(--cyan)}
+  
+  /* PARTICLES */
+  .particles{position:relative;height:28px;overflow:hidden;border-radius:4px;background:rgba(0,0,0,0.3);margin-top:8px}
+  .particle{position:absolute;top:50%;width:6px;height:6px;border-radius:50%;animation:flow-particle linear infinite;transform:translateY(-50%)}
+  @keyframes flow-particle{from{left:-8px;opacity:.8}to{left:calc(100% + 8px);opacity:0}}
+  
+  /* DETAIL PANEL */
+  .detail-panel{background:var(--bg3);border:1px solid rgba(255,255,255,0.06);border-radius:10px;padding:14px;margin-top:12px;animation:slide-in .3s ease}
+  @keyframes slide-in{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+  .detail-panel h4{font-size:13px;font-weight:500;margin-bottom:8px}
+  .detail-panel p{font-size:11px;color:var(--text2);line-height:1.6}
+  .detail-list{list-style:none;margin-top:8px}
+  .detail-list li{font-size:11px;color:var(--text2);padding:3px 0;display:flex;align-items:center;gap:6px}
+  .detail-list li::before{content:'';width:4px;height:4px;border-radius:50%;flex-shrink:0}
+  .bronze-li::before{background:var(--bronze2)}
+  .silver-li::before{background:var(--silver)}
+  .gold-li::before{background:var(--gold2)}
+  
+  /* SQL SECTION */
+  .sql-header{margin-bottom:20px}
+  .sql-title{font-size:16px;font-weight:500;margin-bottom:4px}
+  .sql-sub{font-size:12px;color:var(--text2)}
+  
+  .query-tabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:16px}
+  .qtab{font-size:11px;padding:5px 12px;border-radius:20px;cursor:pointer;border:1px solid rgba(255,255,255,0.1);background:transparent;color:var(--text2);transition:all .2s;font-family:var(--mono)}
+  .qtab:hover{border-color:var(--cyan);color:var(--cyan)}
+  .qtab.active{background:rgba(0,229,255,0.1);border-color:var(--cyan);color:var(--cyan)}
+  
+  .sql-window{background:#0d0d16;border:1px solid rgba(255,255,255,0.08);border-radius:12px;overflow:hidden}
+  .sql-titlebar{background:rgba(255,255,255,0.04);padding:10px 16px;display:flex;align-items:center;gap:8px;border-bottom:1px solid rgba(255,255,255,0.06)}
+  .sql-dot{width:10px;height:10px;border-radius:50%}
+  .sql-filename{font-size:11px;color:var(--text2);font-family:var(--mono);margin-left:6px}
+  .sql-body{padding:16px;min-height:200px;position:relative;overflow:hidden}
+  
+  /* TYPING ANIMATION */
+  .sql-line{font-family:var(--mono);font-size:12px;line-height:1.8;white-space:pre;opacity:0;animation:fade-line .15s ease forwards}
+  @keyframes fade-line{to{opacity:1}}
+  
+  /* SQL SYNTAX COLORS */
+  .kw{color:#c792ea}
+  .fn{color:#82aaff}
+  .str{color:#c3e88d}
+  .num{color:#f78c6c}
+  .cmt{color:#546e7a;font-style:italic}
+  .col{color:#ffcb6b}
+  .tbl{color:var(--cyan2)}
+  .op{color:var(--text2)}
+  
+  /* RESULT TABLE */
+  .result-section{margin-top:12px;animation:slide-in .4s ease}
+  .result-label{font-size:10px;text-transform:uppercase;letter-spacing:.1em;color:var(--green);font-family:var(--mono);margin-bottom:8px;display:flex;align-items:center;gap:6px}
+  .result-label::before{content:'';width:6px;height:6px;border-radius:50%;background:var(--green);animation:blink 1s ease infinite}
+  @keyframes blink{0%,100%{opacity:1}50%{opacity:0.3}}
+  
+  .result-table{width:100%;border-collapse:collapse;font-family:var(--mono);font-size:11px}
+  .result-table th{background:rgba(0,229,255,0.08);color:var(--cyan);padding:6px 10px;text-align:left;font-weight:500;border-bottom:1px solid rgba(0,229,255,0.2)}
+  .result-table td{padding:5px 10px;border-bottom:1px solid rgba(255,255,255,0.04);color:var(--text2)}
+  .result-table tr:hover td{background:rgba(255,255,255,0.03)}
+  .result-table tr:last-child td{border-bottom:none}
+  td.num-cell{color:var(--gold2)}
+  td.flag-cell{color:var(--green)}
+  td.warn-cell{color:#ff6b6b}
+  
+  /* METRICS ROW */
+  .metrics{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:16px}
+  .metric{background:var(--bg2);border:1px solid rgba(255,255,255,0.06);border-radius:8px;padding:10px 12px;text-align:center}
+  .metric-val{font-size:20px;font-weight:500;font-family:var(--mono)}
+  .metric-label{font-size:10px;color:var(--text2);margin-top:2px}
+  .cyan-val{color:var(--cyan)}
+  .purple-val{color:var(--purple2)}
+  .gold-val{color:var(--gold)}
+  
+  /* CONTROLS */
+  .controls{display:flex;gap:8px;margin-top:14px;flex-wrap:wrap}
+  .btn{padding:7px 14px;border-radius:6px;font-size:12px;cursor:pointer;border:1px solid;font-family:var(--mono);transition:all .2s}
+  .btn-run{background:rgba(0,229,255,0.1);color:var(--cyan);border-color:rgba(0,229,255,0.3)}
+  .btn-run:hover{background:rgba(0,229,255,0.18)}
+  .btn-clear{background:transparent;color:var(--text2);border-color:rgba(255,255,255,0.1)}
+  .btn-clear:hover{background:rgba(255,255,255,0.05)}
+  
+  /* SPEED CTRL */
+  .speed-row{display:flex;align-items:center;gap:10px;margin-top:10px}
+  .speed-label{font-size:11px;color:var(--text2)}
+  .speed-btn{font-size:10px;padding:3px 8px;border-radius:4px;cursor:pointer;border:1px solid rgba(255,255,255,0.1);background:transparent;color:var(--text2);transition:all .2s}
+  .speed-btn.active{border-color:var(--purple);color:var(--purple2);background:rgba(168,85,247,0.1)}
+  
+  /* STAR SCHEMA VIZ */
+  .schema-viz{background:var(--bg2);border:1px solid rgba(255,255,255,0.06);border-radius:12px;padding:14px;margin-top:14px}
+  
+  /* SCANLINE effect on active layer */
+  @keyframes scanline{0%{top:-20%}100%{top:110%}}
+  .scan-effect{position:absolute;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,rgba(0,229,255,0.6),transparent);animation:scanline 2s linear infinite;pointer-events:none}
+</style>
+
+<div class="container">
+<div class="tabs">
+  <button class="tab active" onclick="switchTab('arch')">🏗 Medallion Architecture</button>
+  <button class="tab" onclick="switchTab('sql')">📊 SQL Analytics</button>
+  <button class="tab" onclick="switchTab('schema')">🌟 Data Model</button>
+</div>
+
+<!-- ARCHITECTURE SECTION -->
+<div id="tab-arch" class="section active">
+  <div class="hero">
+    <div class="hero-title">Medallion Data Warehouse</div>
+    <div class="hero-sub">Click any layer to explore the ETL pipeline · ERP + CRM → Bronze → Silver → Gold</div>
+  </div>
+
+  <!-- BRONZE LAYER -->
+  <div class="layer-card bronze-card active-layer" id="card-bronze" onclick="selectLayer('bronze')">
+    <div class="scan-effect" id="scan-bronze"></div>
+    <div class="layer-badge bronze-badge">
+      <span>⬡</span> Layer 1 · Bronze
+    </div>
+    <div class="layer-title" style="color:var(--bronze2)">Raw Ingestion Layer</div>
+    <div class="layer-desc">Raw CSV data ingested as-is from ERP and CRM source systems. No transformation — exact source replica preserved for auditability and reprocessing.</div>
+    <div>
+      <span class="layer-tag bronze-tag">ERP_Sales.csv</span>
+      <span class="layer-tag bronze-tag">CRM_Customers.csv</span>
+      <span class="layer-tag bronze-tag">SQL Server</span>
+    </div>
+  </div>
+
+  <!-- FLOW ARROW 1→2 -->
+  <div class="flow-arrow">
+    <svg class="flow-arrow-svg" width="200" height="28" viewBox="0 0 200 28">
+      <defs>
+        <linearGradient id="g12" x1="0" x2="1">
+          <stop offset="0%" stop-color="#cd7f32"/>
+          <stop offset="100%" stop-color="#c0c0d0"/>
+        </linearGradient>
+      </defs>
+      <path d="M10 14 L185 14" stroke="url(#g12)" stroke-width="1.5" fill="none" stroke-dasharray="4 3"/>
+      <polygon points="180,10 190,14 180,18" fill="#c0c0d0" opacity=".7"/>
+      <text x="100" y="10" text-anchor="middle" fill="#9090b0" font-size="9" font-family="monospace">CLEANSE + STANDARDIZE</text>
+    </svg>
+  </div>
+
+  <!-- SILVER LAYER -->
+  <div class="layer-card silver-card" id="card-silver" onclick="selectLayer('silver')">
+    <div class="layer-badge silver-badge">
+      <span>◈</span> Layer 2 · Silver
+    </div>
+    <div class="layer-title" style="color:var(--silver2)">Cleansed & Standardized</div>
+    <div class="layer-desc">Data quality enforcement: null handling, deduplication, date normalization, type casting, business rule validation. Integration of ERP + CRM records.</div>
+    <div>
+      <span class="layer-tag silver-tag">NULL → N/A</span>
+      <span class="layer-tag silver-tag">Date Norm</span>
+      <span class="layer-tag silver-tag">Dedup</span>
+      <span class="layer-tag silver-tag">Type Cast</span>
+    </div>
+  </div>
+
+  <!-- FLOW ARROW 2→3 -->
+  <div class="flow-arrow">
+    <svg class="flow-arrow-svg" width="200" height="28" viewBox="0 0 200 28">
+      <defs>
+        <linearGradient id="g23" x1="0" x2="1">
+          <stop offset="0%" stop-color="#c0c0d0"/>
+          <stop offset="100%" stop-color="#ffd700"/>
+        </linearGradient>
+      </defs>
+      <path d="M10 14 L185 14" stroke="url(#g23)" stroke-width="1.5" fill="none" stroke-dasharray="4 3"/>
+      <polygon points="180,10 190,14 180,18" fill="#ffd700" opacity=".7"/>
+      <text x="100" y="10" text-anchor="middle" fill="#9090b0" font-size="9" font-family="monospace">MODEL INTO STAR SCHEMA</text>
+    </svg>
+  </div>
+
+  <!-- GOLD LAYER -->
+  <div class="layer-card gold-card" id="card-gold" onclick="selectLayer('gold')">
+    <div class="layer-badge gold-badge">
+      <span>★</span> Layer 3 · Gold
+    </div>
+    <div class="layer-title" style="color:var(--gold2)">Business-Ready Analytics</div>
+    <div class="layer-desc">Star schema with fact and dimension tables optimized for BI queries. Powers dashboards, KPIs, and all SQL analytical reports.</div>
+    <div>
+      <span class="layer-tag gold-tag">fact_sales</span>
+      <span class="layer-tag gold-tag">dim_customers</span>
+      <span class="layer-tag gold-tag">dim_products</span>
+      <span class="layer-tag gold-tag">dim_date</span>
+    </div>
+  </div>
+
+  <!-- DETAIL PANEL -->
+  <div class="detail-panel" id="detail-panel">
+    <h4 style="color:var(--bronze2)">Bronze Layer — Raw Data Store</h4>
+    <p>Ingests CSV exports from ERP (Enterprise Resource Planning) and CRM (Customer Relationship Management) systems directly into SQL Server tables with zero transformation. Preserves original field names, formats, and even dirty data for full audit trail.</p>
+    <ul class="detail-list">
+      <li class="bronze-li">Bulk INSERT from CSV using BULK INSERT / OPENROWSET</li>
+      <li class="bronze-li">Schema-on-read: columns stored as NVARCHAR initially</li>
+      <li class="bronze-li">Timestamped ingestion log for lineage tracking</li>
+      <li class="bronze-li">No transformation — raw fidelity guaranteed</li>
+    </ul>
+  </div>
+
+  <!-- PIPELINE ANIMATION -->
+  <div class="flow-anim" style="margin-top:16px">
+    <div class="flow-title">Live ETL Pipeline Simulation</div>
+    <div class="pipeline">
+      <div class="pipe-stage stage-raw">CSV Files<br><span style="color:var(--text2);font-size:9px">ERP + CRM</span></div>
+      <div class="pipe-arrow-gap" style="color:var(--text2);font-size:14px">→</div>
+      <div class="pipe-stage stage-raw">Bronze<br><span style="color:var(--text2);font-size:9px">Raw SQL</span></div>
+      <div class="pipe-arrow-gap" style="color:var(--text2);font-size:14px">→</div>
+      <div class="pipe-stage stage-clean">Silver<br><span style="color:var(--text2);font-size:9px">Cleansed</span></div>
+      <div class="pipe-arrow-gap" style="color:var(--text2);font-size:14px">→</div>
+      <div class="pipe-stage stage-model">Gold<br><span style="color:var(--text2);font-size:9px">Star Schema</span></div>
+      <div class="pipe-arrow-gap" style="color:var(--text2);font-size:14px">→</div>
+      <div class="pipe-stage stage-report">BI / SQL<br><span style="color:var(--text2);font-size:9px">Analytics</span></div>
+    </div>
+    <div class="particles" id="particles-bar"></div>
+    <div style="display:flex;justify-content:space-between;margin-top:10px">
+      <span id="flow-status" style="font-size:10px;color:var(--green);font-family:monospace">● PIPELINE RUNNING — 0 records processed</span>
+      <button class="btn btn-run" onclick="togglePipeline()" id="pipe-btn" style="padding:4px 12px;font-size:10px">PAUSE</button>
+    </div>
+  </div>
+
+  <div class="metrics">
+    <div class="metric"><div class="metric-val cyan-val" id="m-raw">0</div><div class="metric-label">Raw Records</div></div>
+    <div class="metric"><div class="metric-val purple-val" id="m-clean">0</div><div class="metric-label">Cleaned</div></div>
+    <div class="metric"><div class="metric-val gold-val" id="m-gold">0</div><div class="metric-label">Gold Ready</div></div>
+  </div>
+</div>
+
+<!-- SQL ANALYTICS SECTION -->
+<div id="tab-sql" class="section">
+  <div class="sql-header">
+    <div class="sql-title">SQL Analytics Engine</div>
+    <div class="sql-sub">Live query animations from the Data Analytics project — Customer Behavior · Product Performance · Sales Trends</div>
+  </div>
+
+  <div class="query-tabs">
+    <button class="qtab active" onclick="loadQuery(0)">Customer Behavior</button>
+    <button class="qtab" onclick="loadQuery(1)">Product Performance</button>
+    <button class="qtab" onclick="loadQuery(2)">Sales Trends</button>
+    <button class="qtab" onclick="loadQuery(3)">RFM Segments</button>
+  </div>
+
+  <div class="sql-window">
+    <div class="sql-titlebar">
+      <div class="sql-dot" style="background:#ff5f57"></div>
+      <div class="sql-dot" style="background:#febc2e"></div>
+      <div class="sql-dot" style="background:#28c840"></div>
+      <span class="sql-filename" id="sql-filename">analytics/customer_behavior.sql</span>
+    </div>
+    <div class="sql-body" id="sql-body"></div>
+  </div>
+
+  <div class="controls">
+    <button class="btn btn-run" onclick="runQuery()" id="run-btn">▶ Run Query</button>
+    <button class="btn btn-clear" onclick="clearQuery()">✕ Clear</button>
+    <div style="flex:1"></div>
+    <div class="speed-row">
+      <span class="speed-label">Speed:</span>
+      <button class="speed-btn active" onclick="setSpeed(1,this)">1×</button>
+      <button class="speed-btn" onclick="setSpeed(3,this)">3×</button>
+      <button class="speed-btn" onclick="setSpeed(10,this)">10×</button>
+    </div>
+  </div>
+
+  <div id="result-area"></div>
+</div>
+
+<!-- STAR SCHEMA SECTION -->
+<div id="tab-schema" class="section">
+  <div class="sql-header">
+    <div class="sql-title">Gold Layer — Star Schema</div>
+    <div class="sql-sub">Dimensional model powering all analytics. Central fact table with 4 dimension joins.</div>
+  </div>
+
+  <div class="schema-viz">
+    <svg width="100%" viewBox="0 0 620 420" style="max-width:620px">
+      <defs>
+        <radialGradient id="fact-glow" cx="50%" cy="50%" r="50%">
+          <stop offset="0%" stop-color="rgba(255,215,0,0.3)"/>
+          <stop offset="100%" stop-color="transparent"/>
+        </radialGradient>
+        <marker id="sch-arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+          <path d="M2 1L8 5L2 9" fill="none" stroke="#ffd700" stroke-width="1.5" stroke-linecap="round"/>
+        </marker>
+      </defs>
+      
+      <!-- Glow circle behind fact -->
+      <circle cx="310" cy="210" r="90" fill="url(#fact-glow)" opacity=".6"/>
+      
+      <!-- FACT TABLE (center) -->
+      <rect x="220" y="155" width="180" height="110" rx="10" fill="rgba(255,215,0,0.08)" stroke="#ffd700" stroke-width="1.5"/>
+      <rect x="220" y="155" width="180" height="28" rx="10" fill="rgba(255,215,0,0.2)"/>
+      <rect x="220" y="175" width="180" height="8" rx="0" fill="rgba(255,215,0,0.2)"/>
+      <text x="310" y="173" text-anchor="middle" fill="#ffe44d" font-size="12" font-weight="600" font-family="monospace">fact_sales</text>
+      <text x="236" y="197" fill="#c0c0d0" font-size="10" font-family="monospace">order_id</text><text x="380" y="197" text-anchor="end" fill="#ff6b6b" font-size="9" font-family="monospace">PK</text>
+      <text x="236" y="212" fill="#9090b0" font-size="10" font-family="monospace">customer_id</text><text x="380" y="212" text-anchor="end" fill="#ffcb6b" font-size="9" font-family="monospace">FK</text>
+      <text x="236" y="227" fill="#9090b0" font-size="10" font-family="monospace">product_id</text><text x="380" y="227" text-anchor="end" fill="#ffcb6b" font-size="9" font-family="monospace">FK</text>
+      <text x="236" y="242" fill="#9090b0" font-size="10" font-family="monospace">sales_amount</text>
+      <text x="236" y="257" fill="#9090b0" font-size="10" font-family="monospace">order_date</text>
+
+      <!-- DIM CUSTOMERS (left) -->
+      <rect x="20" y="140" width="148" height="120" rx="8" fill="rgba(168,85,247,0.07)" stroke="#a855f7" stroke-width="1"/>
+      <rect x="20" y="140" width="148" height="24" rx="8" fill="rgba(168,85,247,0.18)"/>
+      <rect x="20" y="156" width="148" height="8" rx="0" fill="rgba(168,85,247,0.18)"/>
+      <text x="94" y="157" text-anchor="middle" fill="#c084fc" font-size="11" font-weight="600" font-family="monospace">dim_customers</text>
+      <text x="36" y="179" fill="#9090b0" font-size="9.5" font-family="monospace">customer_id</text><text x="160" y="179" text-anchor="end" fill="#ff6b6b" font-size="9" font-family="monospace">PK</text>
+      <text x="36" y="193" fill="#9090b0" font-size="9.5" font-family="monospace">customer_name</text>
+      <text x="36" y="207" fill="#9090b0" font-size="9.5" font-family="monospace">country</text>
+      <text x="36" y="221" fill="#9090b0" font-size="9.5" font-family="monospace">segment</text>
+      <text x="36" y="235" fill="#9090b0" font-size="9.5" font-family="monospace">account_open_date</text>
+      <!-- FK line -->
+      <line x1="168" y1="200" x2="220" y2="200" stroke="#a855f7" stroke-width="1" stroke-dasharray="3 2" marker-end="url(#sch-arrow)" opacity=".7"/>
+
+      <!-- DIM PRODUCTS (right) -->
+      <rect x="452" y="140" width="152" height="120" rx="8" fill="rgba(0,229,255,0.05)" stroke="#00e5ff" stroke-width="1"/>
+      <rect x="452" y="140" width="152" height="24" rx="8" fill="rgba(0,229,255,0.14)"/>
+      <rect x="452" y="156" width="152" height="8" rx="0" fill="rgba(0,229,255,0.14)"/>
+      <text x="528" y="157" text-anchor="middle" fill="#80f0ff" font-size="11" font-weight="600" font-family="monospace">dim_products</text>
+      <text x="468" y="179" fill="#9090b0" font-size="9.5" font-family="monospace">product_id</text><text x="596" y="179" text-anchor="end" fill="#ff6b6b" font-size="9" font-family="monospace">PK</text>
+      <text x="468" y="193" fill="#9090b0" font-size="9.5" font-family="monospace">product_name</text>
+      <text x="468" y="207" fill="#9090b0" font-size="9.5" font-family="monospace">category</text>
+      <text x="468" y="221" fill="#9090b0" font-size="9.5" font-family="monospace">subcategory</text>
+      <text x="468" y="235" fill="#9090b0" font-size="9.5" font-family="monospace">cost</text>
+      <!-- FK line -->
+      <line x1="452" y1="207" x2="400" y2="215" stroke="#00e5ff" stroke-width="1" stroke-dasharray="3 2" marker-end="url(#sch-arrow)" opacity=".7"/>
+
+      <!-- DIM DATE (top) -->
+      <rect x="215" y="20" width="190" height="100" rx="8" fill="rgba(0,255,136,0.05)" stroke="#00ff88" stroke-width="1"/>
+      <rect x="215" y="20" width="190" height="24" rx="8" fill="rgba(0,255,136,0.13)"/>
+      <rect x="215" y="36" width="190" height="8" rx="0" fill="rgba(0,255,136,0.13)"/>
+      <text x="310" y="37" text-anchor="middle" fill="#00ff88" font-size="11" font-weight="600" font-family="monospace">dim_date</text>
+      <text x="231" y="59" fill="#9090b0" font-size="9.5" font-family="monospace">date_id</text><text x="397" y="59" text-anchor="end" fill="#ff6b6b" font-size="9" font-family="monospace">PK</text>
+      <text x="231" y="73" fill="#9090b0" font-size="9.5" font-family="monospace">year / quarter / month</text>
+      <text x="231" y="87" fill="#9090b0" font-size="9.5" font-family="monospace">week_number</text>
+      <text x="231" y="101" fill="#9090b0" font-size="9.5" font-family="monospace">is_weekend</text>
+      <!-- FK line -->
+      <line x1="310" y1="120" x2="310" y2="155" stroke="#00ff88" stroke-width="1" stroke-dasharray="3 2" marker-end="url(#sch-arrow)" opacity=".7"/>
+
+      <!-- DIM TERRITORY (bottom) -->
+      <rect x="215" y="300" width="190" height="95" rx="8" fill="rgba(248,113,113,0.05)" stroke="#f87171" stroke-width="1"/>
+      <rect x="215" y="300" width="190" height="24" rx="8" fill="rgba(248,113,113,0.13)"/>
+      <rect x="215" y="316" width="190" height="8" rx="0" fill="rgba(248,113,113,0.13)"/>
+      <text x="310" y="317" text-anchor="middle" fill="#f87171" font-size="11" font-weight="600" font-family="monospace">dim_territory</text>
+      <text x="231" y="339" fill="#9090b0" font-size="9.5" font-family="monospace">territory_id</text><text x="397" y="339" text-anchor="end" fill="#ff6b6b" font-size="9" font-family="monospace">PK</text>
+      <text x="231" y="353" fill="#9090b0" font-size="9.5" font-family="monospace">country / region</text>
+      <text x="231" y="367" fill="#9090b0" font-size="9.5" font-family="monospace">sales_territory</text>
+      <text x="231" y="381" fill="#9090b0" font-size="9.5" font-family="monospace">timezone</text>
+      <!-- FK line -->
+      <line x1="310" y1="265" x2="310" y2="300" stroke="#f87171" stroke-width="1" stroke-dasharray="3 2" marker-end="url(#sch-arrow)" opacity=".7"/>
+      
+      <!-- Legend -->
+      <circle cx="30" cy="400" r="4" fill="#ff6b6b"/>
+      <text x="40" y="404" fill="#9090b0" font-size="10" font-family="monospace">PK — Primary Key</text>
+      <circle cx="170" cy="400" r="4" fill="#ffcb6b"/>
+      <text x="180" y="404" fill="#9090b0" font-size="10" font-family="monospace">FK — Foreign Key</text>
+      <line x1="300" y1="396" x2="320" y2="404" stroke="#ffd700" stroke-width="1" stroke-dasharray="3 2"/>
+      <text x="325" y="404" fill="#9090b0" font-size="10" font-family="monospace">JOIN relationship</text>
+    </svg>
+  </div>
+
+  <div class="metrics" style="margin-top:14px">
+    <div class="metric"><div class="metric-val cyan-val">1</div><div class="metric-label">Fact Table</div></div>
+    <div class="metric"><div class="metric-val purple-val">4</div><div class="metric-label">Dimensions</div></div>
+    <div class="metric"><div class="metric-val gold-val">∞</div><div class="metric-label">Analytics Ready</div></div>
+  </div>
+</div>
+</div>
+
+<script>
+// === TAB SWITCHING ===
+function switchTab(name) {
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('tab-' + name).classList.add('active');
+  event.target.classList.add('active');
+}
+
+// === LAYER SELECTION ===
+const layerDetails = {
+  bronze: {
+    title: 'Bronze Layer — Raw Data Store',
+    color: 'var(--bronze2)',
+    body: 'Ingests CSV exports from ERP and CRM systems directly into SQL Server with zero transformation. Preserves original field names, formats, and dirty data for full audit trail.',
+    items: [
+      'Bulk INSERT from ERP_Sales.csv and CRM_Customers.csv',
+      'Schema-on-read: columns as NVARCHAR initially',
+      'Timestamped ingestion logs for lineage',
+      'No transformation — raw fidelity guaranteed'
+    ],
+    cls: 'bronze-li'
+  },
+  silver: {
+    title: 'Silver Layer — Data Cleansing & Integration',
+    color: 'var(--silver2)',
+    body: 'Applies data quality rules: handling NULLs (→ "N/A", 0, "Unknown"), standardizing gender codes (M→Male, F→Female), normalizing date formats, deduplicating records, and merging ERP+CRM datasets.',
+    items: [
+      'NULL handling: empty strings → "N/A", numeric NULLs → 0',
+      'Date normalization: all to YYYY-MM-DD format',
+      'Deduplication via ROW_NUMBER() PARTITION logic',
+      'ERP + CRM integration on customer_id join key'
+    ],
+    cls: 'silver-li'
+  },
+  gold: {
+    title: 'Gold Layer — Business-Ready Star Schema',
+    color: 'var(--gold2)',
+    body: 'Dimensional model with a central fact_sales table surrounded by dim_customers, dim_products, dim_date, and dim_territory. Optimized for aggregation, slicing, and BI tool consumption.',
+    items: [
+      'fact_sales: order_id, amounts, quantities, FKs',
+      'dim_customers: segments, geography, tenure scores',
+      'dim_products: hierarchy (category → subcategory → product)',
+      'dim_date: year, quarter, month, week, weekend flags'
+    ],
+    cls: 'gold-li'
+  }
+};
+
+function selectLayer(layer) {
+  ['bronze','silver','gold'].forEach(l => document.getElementById('card-'+l).classList.remove('active-layer'));
+  document.getElementById('card-'+layer).classList.add('active-layer');
+  const d = layerDetails[layer];
+  const p = document.getElementById('detail-panel');
+  p.style.animation = 'none'; p.offsetHeight; p.style.animation = '';
+  p.innerHTML = `<h4 style="color:${d.color}">${d.title}</h4><p>${d.body}</p><ul class="detail-list">${d.items.map(i=>`<li class="${d.cls}">${i}</li>`).join('')}</ul>`;
+}
+
+// === PIPELINE ANIMATION ===
+let pipeRunning = true;
+let rawCount = 0, cleanCount = 0, goldCount = 0;
+let pipeInterval;
+
+function makeParticle() {
+  if (!pipeRunning) return;
+  const bar = document.getElementById('particles-bar');
+  const p = document.createElement('div');
+  p.className = 'particle';
+  const colors = ['#cd7f32','#c0c0d0','#ffd700','#00e5ff'];
+  const c = colors[Math.floor(Math.random() * colors.length)];
+  const dur = 1.2 + Math.random() * 1.5;
+  const size = 4 + Math.random() * 4;
+  p.style.cssText = `width:${size}px;height:${size}px;background:${c};animation-duration:${dur}s;top:${4 + Math.random() * 16}px;box-shadow:0 0 6px ${c}`;
+  bar.appendChild(p);
+  setTimeout(() => p.remove(), dur * 1000);
+}
+
+function updateCounters() {
+  if (!pipeRunning) return;
+  rawCount += Math.floor(Math.random() * 150) + 50;
+  cleanCount = Math.floor(rawCount * 0.94);
+  goldCount = Math.floor(cleanCount * 0.88);
+  document.getElementById('m-raw').textContent = rawCount.toLocaleString();
+  document.getElementById('m-clean').textContent = cleanCount.toLocaleString();
+  document.getElementById('m-gold').textContent = goldCount.toLocaleString();
+  document.getElementById('flow-status').textContent = `● PIPELINE RUNNING — ${rawCount.toLocaleString()} records processed`;
+}
+
+setInterval(makeParticle, 180);
+setInterval(updateCounters, 900);
+
+function togglePipeline() {
+  pipeRunning = !pipeRunning;
+  document.getElementById('pipe-btn').textContent = pipeRunning ? 'PAUSE' : 'RESUME';
+  document.getElementById('flow-status').style.color = pipeRunning ? 'var(--green)' : 'var(--text2)';
+  document.getElementById('flow-status').textContent = pipeRunning ? `● PIPELINE RUNNING — ${rawCount.toLocaleString()} records processed` : `⏸ PIPELINE PAUSED — ${rawCount.toLocaleString()} records`;
+}
+
+// === SQL QUERIES ===
+const queries = [
+  {
+    file: 'analytics/customer_behavior.sql',
+    lines: [
+      ['cmt','-- Customer segmentation by total purchases & recency'],
+      ['kw','SELECT'],
+      ['col','    c.customer_id,'],
+      ['col','    c.customer_name,'],
+      ['col','    c.country,'],
+      ['fn','    COUNT','(','op','DISTINCT','op',' s.order_id',') ','kw','AS ','col','total_orders,'],
+      ['fn','    SUM','(s.sales_amount) ','kw','AS ','col','lifetime_value,'],
+      ['fn','    DATEDIFF','(','str',"'month'",'op',', ','fn','MIN','(s.order_date), ','fn','GETDATE','()) ','kw','AS ','col','months_active'],
+      ['kw','FROM ','tbl','gold.fact_sales s'],
+      ['kw','INNER JOIN ','tbl','gold.dim_customers c'],
+      ['op','    ON s.customer_id = c.customer_id'],
+      ['kw','WHERE ','col','s.order_date ','op','>= ','fn','DATEADD','(','str',"'year'",'op',', -','num','2',', ','fn','GETDATE','())'],
+      ['kw','GROUP BY ','col','c.customer_id, c.customer_name, c.country'],
+      ['kw','HAVING ','fn','COUNT','(','kw','DISTINCT ','col','s.order_id) ','op','> ','num','1'],
+      ['kw','ORDER BY ','col','lifetime_value ','kw','DESC'],
+      ['op',';']
+    ],
+    result: {
+      cols: ['customer_id','customer_name','country','total_orders','lifetime_value'],
+      rows: [
+        ['C-00291','Sarah Mitchell','United States','47','$142,830','flag-cell'],
+        ['C-00104','Raj Patel','India','39','$98,440','flag-cell'],
+        ['C-00387','Emma Wilson','United Kingdom','34','$87,920','flag-cell'],
+        ['C-00512','Carlos Mendez','Mexico','28','$63,150',''],
+        ['C-00078','Yuki Tanaka','Japan','22','$51,200',''],
+      ]
+    }
+  },
+  {
+    file: 'analytics/product_performance.sql',
+    lines: [
+      ['cmt','-- Product profitability analysis with margin calculation'],
+      ['kw','SELECT'],
+      ['col','    p.category,'],
+      ['col','    p.subcategory,'],
+      ['col','    p.product_name,'],
+      ['fn','    SUM','(s.quantity) ','kw','AS ','col','units_sold,'],
+      ['fn','    SUM','(s.sales_amount) ','kw','AS ','col','revenue,'],
+      ['fn','    SUM','(s.sales_amount - (s.quantity * p.cost)) ','kw','AS ','col','gross_profit,'],
+      ['fn','    ROUND','(','fn','SUM','(s.sales_amount - (s.quantity * p.cost)) * ','num','100.0'],
+      ['op','        / NULLIF(','fn','SUM','(s.sales_amount), ','num','0','), ','num','2',') ','kw','AS ','col','margin_pct'],
+      ['kw','FROM ','tbl','gold.fact_sales s'],
+      ['kw','JOIN ','tbl','gold.dim_products p ','kw','ON ','col','s.product_id = p.product_id'],
+      ['kw','GROUP BY ','col','p.category, p.subcategory, p.product_name'],
+      ['kw','ORDER BY ','col','gross_profit ','kw','DESC'],
+      ['op',';']
+    ],
+    result: {
+      cols: ['category','subcategory','product_name','units_sold','margin_pct'],
+      rows: [
+        ['Electronics','Computers','Surface Pro 9','2,841','38.2%'],
+        ['Electronics','Phones','iPhone 15 Pro','1,923','31.7%'],
+        ['Furniture','Chairs','Ergonomic Mesh Pro','4,102','52.4%'],
+        ['Office','Paper','Premium A4 Ream','18,440','67.1%'],
+        ['Electronics','Audio','AirPods Pro 2','3,271','28.9%'],
+      ]
+    }
+  },
+  {
+    file: 'analytics/sales_trends.sql',
+    lines: [
+      ['cmt','-- Monthly revenue trend with YoY growth rate'],
+      ['kw','WITH ','col','monthly_sales ','kw','AS','('],
+      ['kw','    SELECT'],
+      ['col','        d.year,'],
+      ['col','        d.month_name,'],
+      ['col','        d.month_number,'],
+      ['fn','        SUM','(s.sales_amount) ','kw','AS ','col','monthly_revenue'],
+      ['kw','    FROM ','tbl','gold.fact_sales s'],
+      ['kw','    JOIN ','tbl','gold.dim_date d ','kw','ON ','col','s.date_id = d.date_id'],
+      ['kw','    GROUP BY ','col','d.year, d.month_name, d.month_number'],
+      [')'],
+      ['kw','SELECT'],
+      ['col','    year, month_name, monthly_revenue,'],
+      ['fn','    LAG','(monthly_revenue) ','kw','OVER ','(','kw','PARTITION BY ','col','month_number'],
+      ['kw','        ORDER BY ','col','year',') ','kw','AS ','col','prev_year_revenue,'],
+      ['fn','    ROUND','((monthly_revenue - ','fn','LAG','(monthly_revenue) ','kw','OVER'],
+      ['op','        (','kw','PARTITION BY ','col','month_number ','kw','ORDER BY ','col','year',')) * ','num','100.0'],
+      ['op','        / ','fn','NULLIF','(','fn','LAG','(monthly_revenue) ','kw','OVER'],
+      ['op','        (','kw','PARTITION BY ','col','month_number ','kw','ORDER BY ','col','year','), ','num','0','), ','num','2',')'],
+      ['kw','    AS ','col','yoy_growth_pct'],
+      ['kw','FROM ','col','monthly_sales'],
+      ['kw','ORDER BY ','col','year','op',', ','col','month_number',';']
+    ],
+    result: {
+      cols: ['year','month','monthly_revenue','prev_yr_revenue','yoy_growth'],
+      rows: [
+        ['2024','January','$284,110','$241,900','+17.4%'],
+        ['2024','February','$267,840','$229,150','+16.9%'],
+        ['2024','March','$312,490','$258,300','+21.0%'],
+        ['2024','April','$298,750','$271,420','+10.1%'],
+        ['2024','May','$341,200','$289,870','+17.7%'],
+      ]
+    }
+  },
+  {
+    file: 'analytics/rfm_segmentation.sql',
+    lines: [
+      ['cmt','-- RFM (Recency, Frequency, Monetary) customer scoring'],
+      ['kw','WITH ','col','rfm_raw ','kw','AS','('],
+      ['kw','    SELECT'],
+      ['col','        customer_id,'],
+      ['fn','        DATEDIFF','(day, ','fn','MAX','(order_date), ','fn','GETDATE','()) ','kw','AS ','col','recency,'],
+      ['fn','        COUNT','(order_id) ','kw','AS ','col','frequency,'],
+      ['fn','        SUM','(sales_amount) ','kw','AS ','col','monetary'],
+      ['kw','    FROM ','tbl','gold.fact_sales'],
+      ['kw','    GROUP BY ','col','customer_id'],
+      ['),'],
+      ['col','rfm_scores ','kw','AS','('],
+      ['kw','    SELECT *,'],
+      ['fn','        NTILE','(','num','5',') ','kw','OVER ','(','kw','ORDER BY ','col','recency ','kw','DESC',') ','kw','AS ','col','r_score,'],
+      ['fn','        NTILE','(','num','5',') ','kw','OVER ','(','kw','ORDER BY ','col','frequency',') ','kw','AS ','col','f_score,'],
+      ['fn','        NTILE','(','num','5',') ','kw','OVER ','(','kw','ORDER BY ','col','monetary',') ','kw','AS ','col','m_score'],
+      ['kw','    FROM ','col','rfm_raw'],
+      [')'],
+      ['kw','SELECT *,'],
+      ['kw','    CASE'],
+      ['kw','        WHEN ','col','r_score ','op','>= ','num','4 ','kw','AND ','col','f_score ','op','>= ','num','4 ','kw','THEN ','str',"'Champions'"],
+      ['kw','        WHEN ','col','r_score ','op','>= ','num','3 ','kw','AND ','col','f_score ','op','>= ','num','3 ','kw','THEN ','str',"'Loyal Customers'"],
+      ['kw','        WHEN ','col','r_score ','op','>= ','num','4 ','kw','THEN ','str',"'Recent Customers'"],
+      ['kw','        ELSE ','str',"'At Risk'"],
+      ['kw','    END ','kw','AS ','col','customer_segment'],
+      ['kw','FROM ','col','rfm_scores','op',';']
+    ],
+    result: {
+      cols: ['customer_id','recency','frequency','monetary','segment'],
+      rows: [
+        ['C-00291','3 days','47','$142,830','Champions'],
+        ['C-00104','8 days','39','$98,440','Champions'],
+        ['C-00512','45 days','12','$28,400','Loyal Customers'],
+        ['C-00831','120 days','5','$9,200','At Risk'],
+        ['C-00067','180 days','2','$1,800','At Risk'],
+      ]
+    }
+  }
+];
+
+let currentQuery = 0;
+let typingTimer = null;
+let querySpeed = 1;
+let isTyping = false;
+
+function setSpeed(s, btn) {
+  querySpeed = s;
+  document.querySelectorAll('.speed-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+}
+
+function loadQuery(idx) {
+  currentQuery = idx;
+  clearQuery();
+  document.querySelectorAll('.qtab').forEach((t,i) => t.classList.toggle('active', i===idx));
+  document.getElementById('sql-filename').textContent = queries[idx].file;
+  document.getElementById('result-area').innerHTML = '';
+}
+
+function renderLine(tokens) {
+  let html = '';
+  for (let i = 0; i < tokens.length; i++) {
+    const cls = tokens[i];
+    const txt = tokens[++i];
+    if (cls === 'op' || cls === '' ) html += `<span style="color:var(--text2)">${txt}</span>`;
+    else if (cls === 'kw')  html += `<span class="kw">${txt}</span>`;
+    else if (cls === 'fn')  html += `<span class="fn">${txt}</span>`;
+    else if (cls === 'str') html += `<span class="str">${txt}</span>`;
+    else if (cls === 'num') html += `<span class="num">${txt}</span>`;
+    else if (cls === 'cmt') html += `<span class="cmt">${txt}</span>`;
+    else if (cls === 'col') html += `<span class="col">${txt}</span>`;
+    else if (cls === 'tbl') html += `<span class="tbl">${txt}</span>`;
+    else html += txt;
+  }
+  return html;
+}
+
+function clearQuery() {
+  if (typingTimer) clearTimeout(typingTimer);
+  isTyping = false;
+  document.getElementById('sql-body').innerHTML = '';
+  document.getElementById('result-area').innerHTML = '';
+  document.getElementById('run-btn').textContent = '▶ Run Query';
+}
+
+function runQuery() {
+  if (isTyping) { clearQuery(); return; }
+  isTyping = true;
+  document.getElementById('run-btn').textContent = '■ Stop';
+  document.getElementById('sql-body').innerHTML = '';
+  document.getElementById('result-area').innerHTML = '';
+  
+  const q = queries[currentQuery];
+  let lineIdx = 0;
+  
+  function typeNextLine() {
+    if (!isTyping || lineIdx >= q.lines.length) {
+      if (isTyping) showResult();
+      isTyping = false;
+      document.getElementById('run-btn').textContent = '▶ Run Query';
+      return;
+    }
+    const div = document.createElement('div');
+    div.className = 'sql-line';
+    div.style.animationDelay = '0s';
+    div.innerHTML = renderLine(q.lines[lineIdx]);
+    document.getElementById('sql-body').appendChild(div);
+    lineIdx++;
+    typingTimer = setTimeout(typeNextLine, Math.max(20, 80 / querySpeed));
+  }
+  typeNextLine();
+}
+
+function showResult() {
+  const q = queries[currentQuery];
+  const r = q.result;
+  const segColors = {'Champions':'var(--gold2)','Loyal Customers':'var(--cyan)','Recent Customers':'var(--green)','At Risk':'#ff6b6b'};
+  
+  let rows = r.rows.map(row => {
+    return `<tr>${row.slice(0,-1).map((cell,ci) => {
+      let cls = '';
+      if (ci === r.rows[0].length - 2 && (cell.includes('$') || cell.includes('%') || /^\d/.test(cell))) cls = 'num-cell';
+      if (cell === 'Champions' || cell === 'Loyal Customers') cls = 'flag-cell';
+      if (cell === 'At Risk') cls = 'warn-cell';
+      const color = segColors[cell] ? `style="color:${segColors[cell]}"` : '';
+      return `<td class="${cls}" ${color}>${cell}</td>`;
+    }).join('')}</tr>`;
+  }).join('');
+  
+  document.getElementById('result-area').innerHTML = `
+    <div class="result-section">
+      <div class="result-label">Query Results — ${r.rows.length} rows returned (${Math.floor(Math.random()*80+20)}ms)</div>
+      <div style="overflow-x:auto;border-radius:8px;border:1px solid rgba(255,255,255,0.06)">
+        <table class="result-table">
+          <thead><tr>${r.cols.map(c=>`<th>${c}</th>`).join('')}</tr></thead>
+          <tbody>${rows}</tbody>
+        </table>
+      </div>
+    </div>`;
+}
+
+// Initial state
+selectLayer('bronze');
+</script>
